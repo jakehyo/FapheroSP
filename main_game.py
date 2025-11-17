@@ -1,61 +1,71 @@
-#Imports needed libraries and files.
+# Imports needed libraries and files.
+import random
+from sys import exit
+
 import pygame
+
 import command
 import logic
-from sys import exit
-import random
 
-#Intializes the game
+# Intializes the game
 pygame.init()
 
-#Sets up resolution
+# Sets up resolution
 height = 600
 width = 800
-screen = pygame.display.set_mode((width,height))
+screen = pygame.display.set_mode((width, height))
 
-gamename = pygame.display.set_caption('Fapland SP')
+# Set window title
+gamename = pygame.display.set_caption("Fapland SP")
 
-#Accesses the clock for framedata
-clock =  pygame.time.Clock()
+# Accesses the clock for framedata
+clock = pygame.time.Clock()
 
-#Creates timer events
+# Creates timer events
 dierolltimer = pygame.event.custom_type()
 dieaddtimer = pygame.event.custom_type()
 second = pygame.event.custom_type()
 halfsecond = pygame.event.custom_type()
 
-#Registers timers in events
+# Registers timers in events
 pygame.time.set_timer(dierolltimer, 50)
 pygame.time.set_timer(halfsecond, 500)
 pygame.time.set_timer(dieaddtimer, 500)
 pygame.time.set_timer(second, 1000)
 
-#Text and Font Setup
-text_color = (255, 255, 255)
+# Text and Font Setup
+text_color = (255, 255, 255)  # Text color for the game, currently white.
 
-#Pre-made function for drawing horizontally centered text
+
+# Pre-made function for drawing horizontally centered text
 def draw_text_center(text, font, text_color, x, y):
     img = font.render(text, True, text_color)
-    img_rect = img.get_rect(center=(x,y))
+    img_rect = img.get_rect(center=(x, y))
     screen.blit(img, img_rect)
 
-#Pre-made function for drawing horizontally centered text   
+
+# Pre-made function for drawing horizontally centered text
 def draw_text(text, font, text_color, x, y):
     img = font.render(text, True, text_color)
-    screen.blit(img, (x,y))
-def get_font(size): # Returns Press-Start-2P in the desired size
+    screen.blit(img, (x, y))
+
+
+def get_font(size):  # Returns Press-Start-2P in the desired size
     return pygame.font.Font("mpv/font.ttf", size)
 
-#Main Game Loop
+
+# Main Game Loop
 def maingame():
-    #Sets game as running
+    # Sets game as running
     run = True
-    #Checks the general settings in the setting file
+    # Checks the general settings in the setting file
     gen_set = logic.general()
     perk_set = logic.perks()
     curse_set = logic.curses()
     invasionchance = gen_set.inv
     modifierchance = gen_set.mod
+    # invasionchance = logic.loadsave("invasion")
+    # modifierchance = logic.loadsave("modifier")
     pointsperperk = perk_set.ppp
     checkpointon = gen_set.checkp
     cursechance = curse_set.baseinv
@@ -65,24 +75,24 @@ def maingame():
     invasioncap = gen_set.invcap
     modifiercap = gen_set.modcap
 
-    #Checks the savedata for checkpoint(Will return 1 if no save)
-    room = logic.loadsave()
+    # Checks the savedata for checkpoint(Will return 1 if no save)
+    room = gen_set.checkpoint
     playroom = room
     shuffle = gen_set.ranround
     preroom = 1
     pausetime = 2
     pause = pausetime
-    played = 0
+    played = gen_set.played
     curse = ""
 
-    #Variables for dice process
+    # Variables for dice process
     dierollface = 1
     rollingtime = 20
-    diefacecolor = 'grey'
+    diefacecolor = "grey"
     lowestroll = gen_set.diemin
     highestroll = gen_set.diemax
 
-    #Game States
+    # Game States
     canplay = True
     rolling = False
     addroll = False
@@ -95,67 +105,74 @@ def maingame():
     perkprimed = False
     cursed = False
 
-
-    #Rewards
+    # Rewards
     perklist = perk_set.rewardlist
     curselist = curse_set.curselist
     myperks = []
     mycurses = []
     playlist = []
-    #Game loop starts here
+
+    # Game loop starts here
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
                 exit()
-            #Button pressing stage
+            # Switch Case on Mouse Click (Button Down)
             if event.type == pygame.MOUSEBUTTONDOWN:
+                #   If the roll button is clicked, roll the dice
                 if ROLL.checkForInput(PLAY_MOUSE) and canplay:
-                    rolled_num = random.randint(lowestroll,highestroll)
-                    rollingtime = 30
+                    rolled_num = random.randint(lowestroll, highestroll)
+                    rollingtime = 20
                     rolling = True
                     canplay = False
-                    diefacecolor = 'grey'
+                    diefacecolor = "grey"
                     preroom = room
-
-                elif CHECK.checkForInput(PLAY_MOUSE) and canplay and (room % 25 == 0 or room >= 100 or room == 1):
+                #   If the checkpoint button is clicked, play the respective checkpoint video.
+                elif (
+                    CHECK.checkForInput(PLAY_MOUSE)
+                    and canplay
+                    and (room % 25 == 0 or room >= 100 or room == 1)
+                ):
                     canplay = False
                     logic.video(room, invasionchance, modifierchance)
                     canplay = True
+                #   If the delete button is clicked, delete the save file and return to room 1.
                 elif DELETE.checkForInput(PLAY_MOUSE) and canplay:
                     logic.deletesave()
                     room = 1
-                
-                if CHOICE1.checkForInput(PLAY_MOUSE) and reward:
+
+                #   If the choice 1 button is clicked, add the perk to the list and activate the room.
+                elif CHOICE1.checkForInput(PLAY_MOUSE) and reward:
                     myperks.append(choice1)
                     activate = True
+                #   If the choice 2 button is clicked, add the perk to the list and activate the room.
                 elif CHOICE2.checkForInput(PLAY_MOUSE) and reward:
                     myperks.append(choice2)
                     activate = True
-
+                ###
+                #   If the skip option is chosen, immediate allow play by rolling dice by setting canplay to True.
                 if SKIP.checkForInput(PLAY_MOUSE) and skip:
                     canplay = True
                     skip = False
                     myperks.remove("Skip 1 Video")
-
+                #   If the play button is clicked, start video playback.
                 elif PLAY.checkForInput(PLAY_MOUSE) and skip:
                     loadvideo = True
                     skip = False
-                
+                #   Confirm to move on the next actionable screen after seeing curse details.
                 if CONFIRM.checkForInput(PLAY_MOUSE) and cursed:
                     mycurses.append(curse)
                     activate = True
-                
-                
-                #if SAVEON.checkForInput(PLAY_MOUSE) and canplay and room == 1:
-                    #if checkpointon == "ON":
-                        #checkpointon = "OFF"
-                    #else:
-                        #checkpointon = "ON"
 
+                # if SAVEON.checkForInput(PLAY_MOUSE) and canplay and room == 1:
+                # if checkpointon == "ON":
+                # checkpointon = "OFF"
+                # else:
+                # checkpointon = "ON"
 
-            #Rolling the die stage
+            # Rolling the die stage
             if rolling:
                 if rollingtime > 0:
                     if event.type == dierolltimer:
@@ -166,7 +183,7 @@ def maingame():
                         rollingtime -= 1
                 else:
                     dierollface = rolled_num
-                    diefacecolor = 'white'
+                    diefacecolor = "white"
                     if pause > 0:
                         if event.type == halfsecond:
                             pause -= 1
@@ -174,17 +191,17 @@ def maingame():
                         pause = pausetime
                         rolling = False
                         addroll = True
-                            
-            #Adding up roll stage
+
+            # Adding up roll stage
             if addroll:
                 if dierollface != 0:
                     if rolled_num > 0:
-                        if event.type == dieaddtimer:    
+                        if event.type == dieaddtimer:
                             dierollface -= 1
                             if room < 100:
                                 room += 1
                     if rolled_num < 0:
-                        if event.type == dieaddtimer:    
+                        if event.type == dieaddtimer:
                             dierollface += 1
                             if room > 1:
                                 room -= 1
@@ -193,14 +210,14 @@ def maingame():
                         if event.type == halfsecond:
                             pause -= 1
                     else:
-                        pause = pausetime                   
+                        pause = pausetime
                         addroll = False
                         if "Skip 1 Video" in myperks:
                             skip = True
                         else:
-                            loadvideo = True     
+                            loadvideo = True
 
-            #Play Video stage
+            # Play Video stage
             if loadvideo:
                 if pause > 0:
                     if event.type == halfsecond:
@@ -208,8 +225,6 @@ def maingame():
                 else:
                     pause = pausetime
                     if preroom // 25 < room // 25 and room > preroom:
-                        if checkpointon == "ON":
-                            logic.saveit(str(room - room%25))
                         if invasionchance + gen_set.checkinv > invasioncap:
                             invasionchance = invasioncap
                         else:
@@ -218,8 +233,19 @@ def maingame():
                             modifierchance = modifiercap
                         else:
                             modifierchance += gen_set.checkmod
+                        if checkpointon == "ON":
+                            logic.saveit(
+                                (room - room % 25),
+                                invasionchance,
+                                modifierchance,
+                                lowestroll,
+                                highestroll,
+                                played,
+                            )
                         if room % 25 != 0:
-                            logic.video(room - room%25, invasionchance, modifierchance)
+                            logic.video(
+                                room - room % 25, invasionchance, modifierchance
+                            )
                     if room < 100:
                         if room % 25 != 0:
                             if shuffle == "ON":
@@ -232,18 +258,24 @@ def maingame():
                                     playlist.append(playroom)
                                 print("Playing Random Round...")
                             else:
-                                playroom = room    
+                                playroom = room
                                 print("Playing Round #" + str(room))
                             print("")
                             played += 1
+                        # Local Variable invasionchanceMod stores current invasion chance. If "No Invasions Next Round" is in perk list, set invasionchance for the round to 0.
+                        invasionchanceMod = invasionchance
                         if "No Invasions Next Round" in myperks:
-                            logic.video(playroom, 0, modifierchance)
+                            invasionchanceMod = 0
                             myperks.remove("No Invasions Next Round")
-                        else:
-                            invaded_check += logic.video(playroom, invasionchance, modifierchance)
+
+                        invaded_check += logic.video(
+                            playroom, invasionchanceMod, modifierchance
+                        )
+
                         print("Break")
                         print("")
-                        invaded_check += logic.image(invasionchance)
+                        invaded_check += logic.image(invasionchanceMod)
+
                     print("Encountered " + str(invaded_check) + " invasions...")
                     print("")
                     loadvideo = False
@@ -254,7 +286,11 @@ def maingame():
                         print("Cursed!")
                         cursed = True
                         curseprimed = False
-                    elif played % pointsperperk == 0 and perk_set.perks == "ON" and room < 100:
+                    elif (
+                        played % pointsperperk == 0
+                        and perk_set.perks == "ON"
+                        and room < 100
+                    ):
                         print("Perk!")
                         perkprimed = False
                         reward = True
@@ -262,7 +298,6 @@ def maingame():
                         canplay = True
                     invaded_check = 0
                     applycurse = 0
-            
 
             if cursed:
                 if curseprimed == False:
@@ -270,9 +305,8 @@ def maingame():
                     if curse == "Moving Back X Rounds!":
                         moveback = random.randint(1, curse_set.movebackmax)
                     curseprimed = True
-                    
 
-            #Reward Stage
+            # Reward Stage
             if reward:
                 if perkprimed == False:
                     choice1 = random.choice(perklist)
@@ -288,7 +322,7 @@ def maingame():
                 if "Decrease Invasion Chance" in myperks:
                     if invasionchance - perk_set.invnum < 0:
                         invasionchance = 0
-                    else:    
+                    else:
                         invasionchance = invasionchance - perk_set.invnum
                     myperks.remove("Decrease Invasion Chance")
                 if "Decrease Modifier Chance" in myperks:
@@ -297,7 +331,7 @@ def maingame():
                     else:
                         modifierchance = modifierchance - perk_set.modnum
                     myperks.remove("Decrease Modifier Chance")
-                
+
                 if "Decreased Die's Maximum Size!" in mycurses:
                     if highestroll - curse_set.diemaxdec >= 1:
                         highestroll = highestroll - curse_set.diemaxdec
@@ -333,72 +367,128 @@ def maingame():
                     reward = False
                     canplay = True
 
-
                 activate = False
                 cursed = False
 
         if lowestroll > highestroll:
-            lowestroll = highestroll - 1                
-        #Black Background
+            lowestroll = highestroll - 1
+        # Black Background
         screen.fill("black")
 
-        #Draws game version and round on the screen
-        draw_text("FapLandSP VER.0.4", get_font(16), 'white', 0, 5)
+        # Draws game version and round on the screen
+        draw_text("FapLandSP VER.0.4", get_font(16), "white", 0, 5)
         if room < 100:
-            draw_text_center("Round:"+ str(room), get_font(50), 'white', 400, 100)
+            draw_text_center("Round:" + str(room), get_font(50), "white", 400, 100)
         else:
-            draw_text_center("FapLand Completed!", get_font(40), 'white', 400, 100)
-        
-        #UI Info
-        if room < 100:
-            draw_text("Points: " + str(played), get_font(16), 'white', 0, 30)
-            draw_text("Die Size: " + str(lowestroll) + ":" + str(highestroll), get_font(16), 'white', 0, 55)
-        #draw_text("Pause: " + str(perk_set.pausenum * myperks.count("Pause Each Video for 10 Seconds")), get_font(16), 'white', 0, 105)
-            draw_text("Skips: " + str(myperks.count("Skip 1 Video")), get_font(16), 'white', 0, 80)
+            draw_text_center("FapLand Completed!", get_font(40), "white", 400, 100)
 
-        #if (preroom % 25 > room % 25 or room % 25 == 0) or gen_set.checkp == "ON" or room == 1:
-        #if :
-        draw_text_center("Checkpoint: " + str(room - room%25) +"%", get_font(20), text_color, 400, 470)
+        # UI Info
+        if room < 100:
+            draw_text("Points: " + str(played), get_font(16), "white", 0, 30)
+            draw_text(
+                "Die Size: " + str(lowestroll) + ":" + str(highestroll),
+                get_font(16),
+                "white",
+                0,
+                55,
+            )
+            # draw_text("Pause: " + str(perk_set.pausenum * myperks.count("Pause Each Video for 10 Seconds")), get_font(16), 'white', 0, 105)
+            draw_text(
+                "Skips: " + str(myperks.count("Skip 1 Video")),
+                get_font(16),
+                "white",
+                0,
+                80,
+            )
+
+        # if (preroom % 25 > room % 25 or room % 25 == 0) or gen_set.checkp == "ON" or room == 1:
+        # if :
+        draw_text_center(
+            "Checkpoint: " + str(room - room % 25) + "%",
+            get_font(20),
+            text_color,
+            400,
+            470,
+        )
         if shuffle == "ON":
             draw_text_center("*Random Rounds*", get_font(20), text_color, 400, 500)
         if gen_set.invon == "ON":
-            draw_text_center("Invasion Chance: " + str(invasionchance) +"%", get_font(20), text_color, 400, 525)
+            draw_text_center(
+                "Invasion Chance: " + str(invasionchance) + "%",
+                get_font(20),
+                text_color,
+                400,
+                525,
+            )
         if gen_set.modon == "ON":
-            draw_text_center("Modifier Chance: " + str(modifierchance) +"%", get_font(20), text_color, 400, 550)
-        draw_text_center("Save Progress?: " + checkpointon, get_font(20), text_color, 400, 575)
+            draw_text_center(
+                "Modifier Chance: " + str(modifierchance) + "%",
+                get_font(20),
+                text_color,
+                400,
+                550,
+            )
+        draw_text_center(
+            "Save Progress?: " + checkpointon, get_font(20), text_color, 400, 575
+        )
 
         if room < 100 and loadvideo:
             if shuffle == "ON":
-                draw_text_center("Playing Random Round...", get_font(20), text_color, 400, 300)               
+                draw_text_center(
+                    "Playing Random Round...", get_font(20), text_color, 400, 300
+                )
             else:
-                draw_text_center("Playing Round: " + str(room), get_font(20), text_color, 400, 300)
-
+                draw_text_center(
+                    "Playing Round: " + str(room), get_font(20), text_color, 400, 300
+                )
 
         if rolling or addroll:
             draw_text_center(str(dierollface), get_font(35), diefacecolor, 400, 250)
-        
+
         if (addroll or loadvideo) and room < 100:
-            draw_text_center("Rolled a " + str(rolled_num), get_font(20), text_color, 400, 370)
-        
-        #Buttons
+            draw_text_center(
+                "Rolled a " + str(rolled_num), get_font(20), text_color, 400, 370
+            )
+
+        # Buttons
         if canplay or reward or skip or cursed:
             PLAY_MOUSE = pygame.mouse.get_pos()
 
-        ROLL = command.Button(image=None,pos=(400,200), text_input= "Roll", font=get_font(20), base_color="white", hovering_color="grey")
+        ROLL = command.Button(
+            image=None,
+            pos=(400, 200),
+            text_input="Roll",
+            font=get_font(20),
+            base_color="white",
+            hovering_color="grey",
+        )
         if canplay and room < 100:
             ROLL.changeColor(PLAY_MOUSE)
             ROLL.update(screen)
             rollbox = pygame.Rect.scale_by(ROLL.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'white', rollbox, 3)
+            pygame.draw.rect(screen, "white", rollbox, 3)
 
-
-        CHOICE1 = command.Button(image=None,pos=(600,350), text_input= "Pick", font=get_font(20), base_color="white", hovering_color="grey")
-        CHOICE2 = command.Button(image=None,pos=(200,350), text_input= "Pick", font=get_font(20), base_color="white", hovering_color="grey")
+        CHOICE1 = command.Button(
+            image=None,
+            pos=(600, 350),
+            text_input="Pick",
+            font=get_font(20),
+            base_color="white",
+            hovering_color="grey",
+        )
+        CHOICE2 = command.Button(
+            image=None,
+            pos=(200, 350),
+            text_input="Pick",
+            font=get_font(20),
+            base_color="white",
+            hovering_color="grey",
+        )
         if reward and room < 100 and perkprimed:
             CHOICE1.changeColor(PLAY_MOUSE)
             CHOICE1.update(screen)
             choice1box = pygame.Rect.scale_by(CHOICE1.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'white', choice1box, 3)
+            pygame.draw.rect(screen, "white", choice1box, 3)
             first, *middle, last = str(choice1).split()
             mid = " ".join(middle)
             draw_text_center(first + " " + str(mid), get_font(15), text_color, 600, 200)
@@ -407,85 +497,155 @@ def maingame():
             CHOICE2.changeColor(PLAY_MOUSE)
             CHOICE2.update(screen)
             choice2box = pygame.Rect.scale_by(CHOICE2.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'white', choice2box, 3)
+            pygame.draw.rect(screen, "white", choice2box, 3)
             first, *middle, last = str(choice2).split()
             mid = " ".join(middle)
-            draw_text_center(first + " "+ str(mid), get_font(15), text_color, 200, 200)
+            draw_text_center(first + " " + str(mid), get_font(15), text_color, 200, 200)
             draw_text_center(last, get_font(15), text_color, 200, 230)
             draw_text_center("Pick a Perk...", get_font(20), text_color, 400, 160)
-        
-        SKIP = command.Button(image=None,pos=(550,350), text_input= "Skip", font=get_font(20), base_color="white", hovering_color="grey")
+
+        SKIP = command.Button(
+            image=None,
+            pos=(550, 350),
+            text_input="Skip",
+            font=get_font(20),
+            base_color="white",
+            hovering_color="grey",
+        )
         if skip and room < 100:
             SKIP.changeColor(PLAY_MOUSE)
             SKIP.update(screen)
             skipbox = pygame.Rect.scale_by(SKIP.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'white', skipbox, 3)
+            pygame.draw.rect(screen, "white", skipbox, 3)
 
-        PLAY = command.Button(image=None,pos=(250,350), text_input= "Play", font=get_font(20), base_color="white", hovering_color="grey")
+        PLAY = command.Button(
+            image=None,
+            pos=(250, 350),
+            text_input="Play",
+            font=get_font(20),
+            base_color="white",
+            hovering_color="grey",
+        )
         if skip and room < 100:
             PLAY.changeColor(PLAY_MOUSE)
             PLAY.update(screen)
             playbox = pygame.Rect.scale_by(PLAY.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'white', playbox, 3)
-        
-        
-        CONFIRM = command.Button(image=None,pos=(400,350), text_input= "Okay", font=get_font(20), base_color="red", hovering_color="grey")
+            pygame.draw.rect(screen, "white", playbox, 3)
+
+        CONFIRM = command.Button(
+            image=None,
+            pos=(400, 350),
+            text_input="Okay",
+            font=get_font(20),
+            base_color="red",
+            hovering_color="grey",
+        )
         if cursed and room < 100:
-            pygame.draw.rect(screen, 'red', pygame.Rect(30,145,750,250), 3)
+            pygame.draw.rect(screen, "red", pygame.Rect(30, 145, 750, 250), 3)
 
             CONFIRM.changeColor(PLAY_MOUSE)
             CONFIRM.update(screen)
             confirmbox = pygame.Rect.scale_by(CONFIRM.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'red', confirmbox, 3)
+            pygame.draw.rect(screen, "red", confirmbox, 3)
             draw_text_center(curse, get_font(16), "red", 400, 230)
             if curse == "Moving Back X Rounds!":
-                draw_text_center("By " + str(moveback) + " rounds", get_font(16), "red", 400, 255)
+                draw_text_center(
+                    "By " + str(moveback) + " rounds", get_font(16), "red", 400, 255
+                )
             if curse == "Decreased Die's Maximum Size!":
-                draw_text_center("By " + str(curse_set.diemaxdec), get_font(16), "red", 400, 255)
+                draw_text_center(
+                    "By " + str(curse_set.diemaxdec), get_font(16), "red", 400, 255
+                )
             if curse == "Decreased Die's Minimum Size!":
-                draw_text_center("By " + str(curse_set.diemindec), get_font(16), "red", 400, 255)
-            draw_text_center("That Round carried a curse!", get_font(25), "red", 400, 170)
-            
+                draw_text_center(
+                    "By " + str(curse_set.diemindec), get_font(16), "red", 400, 255
+                )
+            draw_text_center(
+                "That Round carried a curse!", get_font(25), "red", 400, 170
+            )
 
-
-        #SAVEON = command.Button(image=None,pos=(605,575), text_input= "*", font=get_font(20), base_color="white", hovering_color="grey")
-        #if canplay and room == 1:
-            #if checkpointon == "ON":
-                #SAVEON.changeColor(PLAY_MOUSE)
-                #SAVEON.update(screen)
-            #savebox = pygame.Rect.scale_by(SAVEON.text_rect, 1.2, 1.6)
-            #pygame.draw.rect(screen, 'white', savebox, 3)
+        # SAVEON = command.Button(image=None,pos=(605,575), text_input= "*", font=get_font(20), base_color="white", hovering_color="grey")
+        # if canplay and room == 1:
+        # if checkpointon == "ON":
+        # SAVEON.changeColor(PLAY_MOUSE)
+        # SAVEON.update(screen)
+        # savebox = pygame.Rect.scale_by(SAVEON.text_rect, 1.2, 1.6)
+        # pygame.draw.rect(screen, 'white', savebox, 3)
 
         if room == 1 and canplay:
-            CHECK = command.Button(image=None,pos=(400,150), text_input= "Play Intro?", font=get_font(20), base_color="white", hovering_color="grey")
+            CHECK = command.Button(
+                image=None,
+                pos=(400, 150),
+                text_input="Play Intro?",
+                font=get_font(20),
+                base_color="white",
+                hovering_color="grey",
+            )
         elif room < 100 and canplay:
-            CHECK = command.Button(image=None,pos=(400,150), text_input= "Play Checkpoint?", font=get_font(20), base_color="white", hovering_color="grey")
+            CHECK = command.Button(
+                image=None,
+                pos=(400, 150),
+                text_input="Play Checkpoint?",
+                font=get_font(20),
+                base_color="white",
+                hovering_color="grey",
+            )
         elif room >= 100 and canplay:
-            CHECK = command.Button(image=None,pos=(400,180), text_input= "You Win!", font=get_font(20), base_color="white", hovering_color="grey")
+            CHECK = command.Button(
+                image=None,
+                pos=(400, 180),
+                text_input="You Win!",
+                font=get_font(20),
+                base_color="white",
+                hovering_color="grey",
+            )
         if canplay:
             CHECK.changeColor(PLAY_MOUSE)
-        if room % 25 == 0 or room >= 100 or room == 1 and canplay and perkprimed == False and cursed == False:
+        if (
+            room % 25 == 0
+            or room >= 100
+            or room == 1
+            and canplay
+            and perkprimed == False
+            and cursed == False
+        ):
             CHECK.update(screen)
             checkbox = pygame.Rect.scale_by(CHECK.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'white', checkbox, 3)
-       
+            pygame.draw.rect(screen, "white", checkbox, 3)
+
         if checkpointon == "ON" and room >= 25:
-            DELETE = command.Button(image=None,pos=(400, 50), text_input= "Delete Save?", font=get_font(20), base_color="white", hovering_color="grey")
+            DELETE = command.Button(
+                image=None,
+                pos=(400, 50),
+                text_input="Delete Save?",
+                font=get_font(20),
+                base_color="white",
+                hovering_color="grey",
+            )
         else:
-            DELETE = command.Button(image=None,pos=(400, 50), text_input= "Restart?", font=get_font(20), base_color="white", hovering_color="grey")
+            DELETE = command.Button(
+                image=None,
+                pos=(400, 50),
+                text_input="Restart?",
+                font=get_font(20),
+                base_color="white",
+                hovering_color="grey",
+            )
         if canplay and room > 1:
             DELETE.changeColor(PLAY_MOUSE)
             DELETE.update(screen)
             deletebox = pygame.Rect.scale_by(DELETE.text_rect, 1.2, 1.6)
-            pygame.draw.rect(screen, 'white', deletebox, 3)
+            pygame.draw.rect(screen, "white", deletebox, 3)
 
-        #Updates the display every frame
+        # Updates the display every frame
         pygame.display.update()
 
-        #Updates the clock and limits it to 60 fps
+        # Updates the clock and limits it to 60 fps
         clock.tick(30)
+
+
 maingame()
 
-#Ends the game on exit.
+# Ends the game on exit.
 pygame.quit()
 exit()

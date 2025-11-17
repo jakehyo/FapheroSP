@@ -1,5 +1,6 @@
 from configparser import ConfigParser
 
+
 def loadconfig():
     config = ConfigParser()
     config.optionxform = str
@@ -9,8 +10,7 @@ def loadconfig():
         "Image Breaks between Rounds?": "ON",
         "Breaktime": 10,
         "Default Die Min Size": 1,
-        "Default Die Max Size": 6
-
+        "Default Die Max Size": 6,
     }
 
     config["Invasions"] = {
@@ -20,8 +20,7 @@ def loadconfig():
         "Invasion Rounds During Videos?": "ON",
         "Invasion Rounds During Break?": "OFF",
         "Multiple Invasions During Videos": "ON",
-        "Invasion Chance Increase on Checkpoint": 10
-
+        "Invasion Chance Increase on Checkpoint": 10,
     }
 
     config["Modifiers"] = {
@@ -42,12 +41,11 @@ def loadconfig():
         '"Video Skip" Perk': "ON",
         '"No Invasions Next Round" Perk': "ON",
         '"Invasion Decrease" Perk': "ON",
-        "Decrease Invasion Chance by what %?": 10, 
+        "Decrease Invasion Chance by what %?": 10,
         '"Modifier Decrease" Perk': "ON",
-        "Decrease Modifier Chance by what %?": 10
-  
+        "Decrease Modifier Chance by what %?": 10,
     }
-    
+
     config["Curses"] = {
         "Curses?": "ON",
         "Chance of Curse Per Invasion": 20,
@@ -56,38 +54,50 @@ def loadconfig():
         '"Decrease Die Min Size" Curse': "ON",
         "Decrease Die Min by?": 2,
         '"Invasion Increase" Curse': "ON",
-        "Increase Invasion Chance by what %?": 10, 
+        "Increase Invasion Chance by what %?": 10,
         '"Modifier Increase" Curse': "ON",
         "Increase Modifier Chance by what %?": 10,
         '"Go Back" Curse': "ON",
         "Max Rounds to go back?": 5,
-
     }
 
     config["Randomization"] = {
-          "Randomized Rounds": "OFF",
-          "Randomize Invasion Chance?": "OFF",
-          "Randomize Modifier Chance?": "OFF"
+        "Randomized Rounds": "OFF",
+        "Randomize Invasion Chance?": "OFF",
+        "Randomize Modifier Chance?": "OFF",
     }
 
     config["Custom_File_Locations"] = {
-        "MPV": r'C:/Games/Fap Land/Main Game/',
-        "Fapland_Videos": r'C:/Games/Fap Land/Main Game/FapLand Videos/',
-        "Modifiers": r'C:/Games/Fap Land/Main Game/modifiers',
-        "Invastions": r'C:/Games/Fap Land/Main Game/invasion/',
-        "Intervals": r'C:/Games/Fap Land/Main Game/intervals/'
+        "MPV": r"C:/Games/Fap Land/Main Game/",
+        "Fapland_Videos": r"C:/Games/Fap Land/Main Game/FapLand Videos/",
+        "Modifiers": r"C:/Games/Fap Land/Main Game/modifiers",
+        "Invastions": r"C:/Games/Fap Land/Main Game/invasion/",
+        "Intervals": r"C:/Games/Fap Land/Main Game/intervals/",
     }
 
     with open("Game_Settings.txt", "w") as (my_settings):
-            config.write(my_settings, space_around_delimiters=False)
+        config.write(my_settings, space_around_delimiters=False)
 
-def savedata(currentcheckpoint):
+
+def savedata(
+    currentcheckpoint: int,
+    currentinvasionchance: int,
+    currentmodifierchance: int,
+    mindie: int,
+    maxdie: int,
+    currentpoints: int,
+) -> None:
     save = ConfigParser()
     save.optionxform = str
 
-    save['Save'] = {
+    save["Save"] = {
         "Last Checkpoint": currentcheckpoint,
+        "Current Invasion Chance": currentinvasionchance,
+        "Current Modifier Chance": currentmodifierchance,
+        "Current Die Min Size": mindie,
+        "Current Die Max Size": maxdie,
+        "Current Points": currentpoints,
     }
 
     with open("SaveData.txt", "w") as (my_save):
-            save.write(my_save, space_around_delimiters=False)
+        save.write(my_save, space_around_delimiters=False)

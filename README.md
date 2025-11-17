@@ -15,9 +15,15 @@ Part 2(66-100): https://mega.nz/#F!EpNkjY7I!yNNrmuaoK_YlZq5weeuePA
 
 - Place Invasion Videos in "invasion" folder. Any videos are allowed, but you can find invasions video packs here (Unpack the videos into the invasions folder):
 
+*** LINK TO INVASION FOLDERS NO LONGER WORK. PLEASE DOWNLOAD YOUR OWN INVASION ROUNDS FOR THE TIME BEING (jake_hyo)
+
 Pack 1(Beats 3): https://gofile.io/d/lDki80
 
 Pack 2(Beats 2, Marcurial 2, Pendulum, Secret Island Invasion): https://gofile.io/d/ZJU85E
+
+***
+
+TO-DO: ADD EDI INSTALLATION DIRECTIONS HERE.
 
 - Add your favorite images to the intervals folder (GIFs and Videos are allowed if they are less than 2 seconds)
 - Edit the "Game_Settings.txt" file to change settings to your liking
@@ -48,6 +54,21 @@ Pack 2(Beats 2, Marcurial 2, Pendulum, Secret Island Invasion): https://gofile.i
 - You don't need to change the custom file locations in the settings file unless you change my folder structure or want to store the videos in a different place than the game.
 
 ## Changelog...
+
+### Ver.0.5 (contributed by jake_hyo)
+- Changes
+  -Added EDI support.
+    -Place contents of EDI mod into the same folder/directory as "main_game.exe"
+    - "scripts" folder  for the EDI funscriptsshould exist in the same folder/directory as "main_game.exe"
+    -Game will crash if EDI is not running when the game attempts to start a video. Please ensure EDI is running before starting the game.
+  -Made invasion lengths randomized between [40, 100] seconds UNLESS the invasion source video already lasts 120 seconds or less.
+  -For invasions source videos longer than 120 seconds, the invasion round will have a randomized starting point between [0, video_length - randomized_invasion_duration].
+  -Saves at checkpoints will no longer reset your invasion chance, modifier chance, die size, or point total.
+    -Progress is saved when checkpoint is reached and will not save progress of changes after passing the checkpoint.
+    -Saves currently do not save stored perks like "Skip 1 Video".
+- Fixes
+  - Invasions during breaks no longer occur if the perk "No Invasion Next Round" is used.
+  
 ### Ver.0.4
 - Changes
   - Added randomized rounds mode. 
